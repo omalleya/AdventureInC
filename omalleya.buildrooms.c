@@ -15,7 +15,7 @@ struct Room
 	char name[MAX_LEN_NAME];
 	int totConnections;
 	int curConnections;
-	char **connections;
+	char *connections[MAX_CONNECTIONS];
 	//char connections[MAX_CONNECTIONS][LEN_CONNECTION + MAX_LEN_NAME];
 	char type[MAX_LEN_TYPE];
 };
@@ -35,15 +35,32 @@ void printRoom(struct Room room)
 	int i = 0;
 
 	printf("\nROOM NAME: %s\n", room.name);
+	for(i=0; i<6; i++)
+	{
+		if(strcmp(room.connections[i],"")!=0)
+		{
+			printf("CONNECTION %d: %s\n", i+1, room.connections[i]);
+		}
+	}
 	printf("ROOM TYPE: %s\n", room.type);
 }
 
-void createConnections(struct Room *rooms, int numConnections)
+void createConnections(struct Room *room, int numConnections)
 {
-		rooms[0].connections = (char **) malloc(numConnections * sizeof(char*));
-		rooms[0].connections[0] = (char*) malloc(sizeof(char)*7);
-		strcpy(rooms[0].connections[0], "connect");
-		printf("\n%s\n", rooms[0].connections[0]);
+	int i=0;
+	for(i=0; i<6; i++)
+	{
+		if(i<numConnections)
+		{
+			room->connections[i] = malloc(sizeof(char)*7);
+			strcpy(room->connections[i], "connect");
+		}else {
+			room->connections[i] = malloc(sizeof(char)*7);
+			strcpy(room->connections[i], "");
+		}
+	}
+
+		
 }
 
 void restOfRooms(struct Room *rooms)
@@ -68,7 +85,7 @@ void restOfRooms(struct Room *rooms)
 
 		numConnections = randInt(3,6);
 
-		createConnections(rooms, numConnections);
+		createConnections(&rooms[i], numConnections);
 		printf("\n%d\n", numConnections);
 
 		printRoom(rooms[i]);
