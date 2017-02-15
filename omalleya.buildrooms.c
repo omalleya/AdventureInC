@@ -15,7 +15,8 @@ struct Room
 	char name[MAX_LEN_NAME];
 	int totConnections;
 	int curConnections;
-	char connections[MAX_CONNECTIONS][LEN_CONNECTION + MAX_LEN_NAME];
+	char **connections;
+	//char connections[MAX_CONNECTIONS][LEN_CONNECTION + MAX_LEN_NAME];
 	char type[MAX_LEN_TYPE];
 };
 
@@ -37,7 +38,15 @@ void printRoom(struct Room room)
 	printf("ROOM TYPE: %s\n", room.type);
 }
 
-void createConnections(struct Room *rooms)
+void createConnections(struct Room *rooms, int numConnections)
+{
+		rooms[0].connections = (char **) malloc(numConnections * sizeof(char*));
+		rooms[0].connections[0] = (char*) malloc(sizeof(char)*7);
+		strcpy(rooms[0].connections[0], "connect");
+		printf("\n%s\n", rooms[0].connections[0]);
+}
+
+void restOfRooms(struct Room *rooms)
 {
 	int i = 0;
 	int j = 0;
@@ -58,24 +67,9 @@ void createConnections(struct Room *rooms)
 		}
 
 		numConnections = randInt(3,6);
-		while(j<numConnections)
-		{
-			//find number of connections already
-			//if less than numConnections
-				//add randomConnection to this file and it's corresponding one
-				//make sure randomConnection doesn't point to self
 
-			randomConnection = randInt(0,6);
-			if(randomConnection == i)
-			{
-				continue;
-			}else {
-				//TODO use matrix instead
-				strcpy(rooms[i].connections[j], rooms[randomConnection].name);
-				printf("\n Connection! %s\n", rooms[i].connections[j]);
-				j++;
-			}
-		}
+		createConnections(rooms, numConnections);
+		printf("\n%d\n", numConnections);
 
 		printRoom(rooms[i]);
 	}
@@ -83,8 +77,41 @@ void createConnections(struct Room *rooms)
 
 struct Room* randomRooms()
 {
-	struct Room *rooms;
+	char *roomNames[10] = {"Big","SMALL", "Medium", 
+	     			"L-shaped", "C-shaped", "Swag",
+				"Dank", "Dungeon", "Master", "Basement"};
 
+	int roomCheck[10] = {0,0,0,0,0,0,0,0,0,0};
+	int numRooms = 0;	
+	struct Room *rooms = malloc(7* sizeof(struct Room));
+	int index = -1;
+	int i = 0;
+
+	char *test;
+
+	//while we still have rooms to create
+	while(numRooms < 7)
+	{
+		//get random index for a room name
+		index = randInt(0,9);
+		for(i=0; i<7; i++)
+		{
+			//if temp array index == 1 then it is already the name of a different room
+			if(roomCheck[index]==1)
+			{
+				index = -1;
+			}
+		}
+		if(index!=-1)
+		{
+			strcpy(rooms[numRooms].name, roomNames[index]);
+			roomCheck[index] = 1;
+			numRooms++;
+		}else
+		{
+			continue;
+		}
+	}
 	return rooms;
 }
 
@@ -105,46 +132,12 @@ int main()
 
 	//creates initial directory for rooms
 	createRoomDir();
-	
-	char *roomNames[10] = {"Big","SMALL", "Medium", 
-	     			"L-shaped", "C-shaped", "Swag",
-				"Dank", "Dungeon", "Master", "Basement"};
 
-	int roomCheck[10] = {0,0,0,0,0,0,0,0,0,0};
+	//creates rooms with randomized names
+	struct Room *rooms = randomRooms();
 
-	int numRooms = 0;	
-	struct Room rooms[7];
-	int index = -1;
-	int i = 0;
-	for(i=0;i<7;i++)
-	{
-		strcpy(rooms[i].name, "");
-	}
-
-	char *test;
-
-	while(numRooms < 7)
-	{
-		index = randInt(0,9);
-		for(i=0; i<7; i++)
-		{
-			if(roomCheck[index]==1)
-			{
-				index = -1;
-			}
-		}
-		if(index!=-1)
-		{
-			strcpy(rooms[numRooms].name, roomNames[index]);
-			roomCheck[index] = 1;
-			numRooms++;
-		}else
-		{
-			continue;
-		}
-	}
-
-	createConnections(rooms);
+	//adds connections and types to rooms
+	restOfRooms(rooms);
 
 	return(0);
 }
