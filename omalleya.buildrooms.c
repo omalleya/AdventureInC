@@ -29,6 +29,58 @@ void createRoomDir()
 
 }
 
+void printRoom(struct Room room)
+{
+	int i = 0;
+
+	printf("\nROOM NAME: %s\n", room.name);
+	printf("ROOM TYPE: %s\n", room.type);
+}
+
+void createConnections(struct Room *rooms)
+{
+	int i = 0;
+	int j = 0;
+	int arraySize = NUM_ROOMS;
+	int numConnections = -1;
+	int randomConnection = -1;
+
+	for(i=0; i<arraySize; i++)
+	{
+		if(i == 0)
+		{
+			strcpy(rooms[i].type, "START_ROOM");
+		}else if(i == arraySize-1)
+		{
+			strcpy(rooms[i].type, "END_ROOM");
+		}else {
+			strcpy(rooms[i].type, "MID_ROOM");
+		}
+
+		numConnections = randInt(3,6);
+		while(j<numConnections)
+		{
+			//find number of connections already
+			//if less than numConnections
+				//add randomConnection to this file and it's corresponding one
+				//make sure randomConnection doesn't point to self
+
+			randomConnection = randInt(0,6);
+			if(randomConnection == i)
+			{
+				continue;
+			}else {
+				//TODO use matrix instead
+				strcpy(rooms[i].connections[j], rooms[randomConnection].name);
+				printf("\n Connection! %s\n", rooms[i].connections[j]);
+				j++;
+			}
+		}
+
+		printRoom(rooms[i]);
+	}
+}
+
 //returns random int between max and min
 int randInt(int min, int max)
 {
@@ -47,15 +99,12 @@ int main()
 	//creates initial directory for rooms
 	createRoomDir();
 	
-	printf("before1");
 	char *roomNames[10] = {"Big","SMALL", "Medium", 
 	     			"L-shaped", "C-shaped", "Swag",
 				"Dank", "Dungeon", "Master", "Basement"};
 
 	int numRooms = 0;	
-	printf("before1");
-	struct Room rooms[7];//= (struct Room*) calloc(NUM_ROOMS, sizeof(*rooms));
-	printf("before");
+	struct Room rooms[7];
 	int index = -1;
 	int i = 0;
 	for(i=0;i<7;i++)
@@ -64,22 +113,17 @@ int main()
 	}
 
 	char *test;
-       	test = strstr((char*)rooms[0].name, (char *) roomNames[0]);
-	//printf("%s\n", rooms[0].name);
-       	printf("%s\n", test);	
-	//printf(":%s\n", roomNames[0]);
 
 	while(numRooms < 7)
 	{
 		index = randInt(0,9);
 		for(i=0; i<7; i++)
 		{
-			//test = strstr((char*)rooms[i].name, (char *) roomNames[index]);
-			//if(test == NULL)
-			//{
-			//	printf("%s\n", test);	
-			//	index = -1;
-			//}
+			test = strstr((char*)rooms[i].name, (char *) roomNames[index]);
+			if(test != 0)
+			{
+				index = -1;
+			}
 		}
 		if(index!=-1)
 		{
@@ -91,10 +135,7 @@ int main()
 		}
 	}
 
-	index = 0;
-	for(index=0; index<7; index++)
-	{
-		printf("ROOM: %s\n",rooms[index].name);
-	}
+	createConnections(rooms);
+
 	return(0);
 }
