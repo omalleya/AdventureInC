@@ -81,6 +81,13 @@ void createConnections(struct Room *rooms)
 	}
 }
 
+struct Room* randomRooms()
+{
+	struct Room *rooms;
+
+	return rooms;
+}
+
 //returns random int between max and min
 int randInt(int min, int max)
 {
@@ -103,6 +110,8 @@ int main()
 	     			"L-shaped", "C-shaped", "Swag",
 				"Dank", "Dungeon", "Master", "Basement"};
 
+	int roomCheck[10] = {0,0,0,0,0,0,0,0,0,0};
+
 	int numRooms = 0;	
 	struct Room rooms[7];
 	int index = -1;
@@ -119,8 +128,7 @@ int main()
 		index = randInt(0,9);
 		for(i=0; i<7; i++)
 		{
-			test = strstr((char*)rooms[i].name, (char *) roomNames[index]);
-			if(test != 0)
+			if(roomCheck[index]==1)
 			{
 				index = -1;
 			}
@@ -128,6 +136,7 @@ int main()
 		if(index!=-1)
 		{
 			strcpy(rooms[numRooms].name, roomNames[index]);
+			roomCheck[index] = 1;
 			numRooms++;
 		}else
 		{
