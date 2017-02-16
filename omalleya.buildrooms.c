@@ -7,6 +7,7 @@
 #define MIN_CONNECTIONS 3
 #define MAX_LEN_TYPE 11
 #define NUM_ROOMS 7
+#define MAX_LEN_NAME 9
 
 int checkMatrix[7][7] = {
 		{1,0,0,0,0,0,0},
@@ -17,6 +18,8 @@ int checkMatrix[7][7] = {
 		{0,0,0,0,0,1,0},
 		{0,0,0,0,0,0,1}
 	};
+
+char dirName[36];
 
 struct Room
 {
@@ -30,28 +33,30 @@ struct Room
 void createRoomDir() 
 {
 	int pid = getpid();
-	char dirName[36];
 	sprintf(dirName, "./omalleya.rooms.%d", pid);
 	//uncomment the below to create directory
-	//mkdir(dirName, 0755);
+	mkdir(dirName, 0755);
 
 }
 
-void printRoom(struct Room room)
+void printRoom(struct Room room,  char* fileName)
 {
+	FILE *f = fopen(fileName, "w");
 	int i = 0;
 	int connectCount = 1;
 
-	printf("\nROOM NAME: %s\n", room.name);
+	fprintf(f, "ROOM NAME: %s\n", room.name);
 	for(i=0; i<6; i++)
 	{
 		if(strcmp(room.connections[i],"")!=0)
 		{
-			printf("CONNECTION %d: %s\n", connectCount, room.connections[i]);
+			fprintf(f, "CONNECTION %d: %s\n", connectCount, room.connections[i]);
 			connectCount++;
 		}
 	}
-	printf("ROOM TYPE: %s\n", room.type);
+	fprintf(f, "ROOM TYPE: %s", room.type);
+
+	fclose(f);
 }
 
 char * getRoomName(int index, struct Room *rooms)
@@ -179,9 +184,15 @@ void restOfRooms(struct Room *rooms)
 		fillConnections(&rooms[i], i, rooms);
 	}
 
+	char* temp = malloc(sizeof(char)*40);
 	for(i=0; i<arraySize; i++)
 	{
-		printRoom(rooms[i]);
+		strcpy(temp, "./");
+		strcat(temp, dirName);
+		strcat(temp, "/");
+		strcat(temp, rooms[i].name);
+		strcat(temp, ".txt");
+		printRoom(rooms[i], temp);
 	}
 }
 
