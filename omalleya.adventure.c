@@ -54,12 +54,13 @@ void getLastDir(char** finalDir)
 
 }
 
-void getData(char *directory)
+struct Room* getData(char *directory)
 {
     int i=0;
     char *fullName = malloc(sizeof(char)*50);
     char *str = malloc(sizeof(char)*200);
     int counter = 0;
+    char  *temp = malloc(sizeof(char)*200);
 
     struct Room *rooms = malloc(sizeof(struct Room)*7);
 
@@ -68,26 +69,33 @@ void getData(char *directory)
         strcpy(fullName, directory);
         strcat(fullName, fileNames[i]);
         strcat(fullName, ".txt");
-        //printf("%s\n", fullName);
         FILE *f = fopen(fullName, "r");
         counter = 0;
         while(fgets(str, 100, f)!=0)
         {
             if(counter == 0)
             {
-                //name
                 printf("\n%s\n", "name");
+                strncpy(rooms[i].name, str+11, 9);
+                printf("\n%s\n", rooms[i].name);
             }else if(str[0] == 'C')
             {
                 printf("%s\n", "connection");
+                rooms[i].connections[counter] = malloc(sizeof(char)*15);
+                strncpy(rooms[i].connections[counter], str+14, 9);
+                printf("\n%s\n", rooms[i].connections[counter]);
+                counter++;
             }else {
                 printf("%s\n", "type");
+                strncpy(rooms[i].type, str+11, 11);
+                printf("\n%s\n", rooms[i].type);
             }
             printf("%s", str);
             counter++;
         }
         fclose(f);
     }
+    return rooms;
 }
 
 int main()
@@ -98,13 +106,17 @@ int main()
     char *next;
     char *dirName = malloc(sizeof(char)*40);
 
+    struct Room *rooms;
+
     //setting up proper string to access directory
     strcpy(dirName, "./");
     getLastDir(&dirName);
     strcat(dirName, "/");
     printf("\n%s\n",dirName);
 
-    getData(dirName);
+    rooms = getData(dirName);
+
+    printf("\nHELLO::: %s\n", rooms[0].name);
 
     do
     {
