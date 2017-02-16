@@ -23,8 +23,12 @@ struct Room
 	char type[MAX_LEN_TYPE];
 };
 
-int endGame()
+int endGame(struct Room *room)
 {
+    if(strcmp(room->type, "END_ROOM") == 0)
+    {
+        return 1;
+    }
     return 0;
 }
 
@@ -113,7 +117,28 @@ void getCurrentRoom()
 
 struct Room* setCurrentRoom(struct Room currentRoom, char* nextRoom)
 {
-    struct Room *newRoom = malloc(sizeof(struct Room));
+    int i=0;
+    struct Room *newRoom;
+    int newRoomCheck = -1;
+
+    nextRoom[strcspn(nextRoom, "\n")] = 0;
+
+    for(i=0; i<6; i++)
+    {
+        if(strcmp(currentRoom.connections[i], nextRoom) == 0)
+        {
+            printf("\nMATCH\n");
+            newRoom = &currentRoom;
+            newRoomCheck = 0;
+            break;
+        }
+    }
+
+    if(newRoomCheck != 0)
+    {
+        printf("\nHUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+        newRoom = &currentRoom;
+    }
 
     return newRoom;
 }
@@ -145,7 +170,6 @@ int main()
 
     do
     {
-        printf("%s", next);
         currentRoom->name[strcspn(currentRoom->name, "\n")] = 0;
         printf("CURRENT LOCATION: %s\n", currentRoom->name);
         printf("POSSIBLE CONNECTIONS: ");
@@ -166,9 +190,9 @@ int main()
             }
         }
         printf("WHERE TO? > ");
-        fgets(next, 10, stdin);
+        fgets(next, 11, stdin);
         currentRoom = setCurrentRoom(*currentRoom, next);
-    }while(endGame() != 1);
+    }while(endGame(currentRoom) != 1);
 
     return(0);
 }
