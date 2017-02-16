@@ -23,13 +23,24 @@ struct Room
 	char type[MAX_LEN_TYPE];
 };
 
-int endGame(struct Room *room)
+int endGame(struct Room room)
 {
-    if(strcmp(room->type, "END_ROOM") == 0)
+    char* end = "END_ROOM";
+    if(strcmp(room.type, end) == 0)
     {
         return 1;
+    }else{
+        return 0;
     }
-    return 0;
+}
+
+void addToPath(char ***curPath, char *nextStep, int steps)
+{
+    int i = 0;
+
+    *curPath = (char**)realloc((*curPath), steps*sizeof(char*));
+    (*curPath)[steps-1] = (char*) malloc(sizeof(char)*20);
+    strcpy((*curPath)[steps-1], nextStep);
 }
 
 void getLastDir(char** finalDir)
@@ -113,7 +124,7 @@ struct Room* getData(char *directory)
     return rooms;
 }
 
-struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* nextRoom)
+struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* nextRoom, int* steps, char*** path)
 {
     int i=0;
     int j=0;
@@ -139,11 +150,13 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
         newRoom = &currentRoom;
     }
     else {
-        for(j=0; j<6; j++)
+        for(j=0; j<7; j++)
         {
             if(strcmp(currentRoom.connections[i], rooms[j].name) == 0)
             {
                 newRoom = &rooms[j];
+                (*steps)++;
+                addToPath(path, rooms[j].name, *steps);
                 break;
             }
         }
@@ -156,6 +169,8 @@ int main()
 {
     char *next = malloc(sizeof(char)*40);
     char *dirName = malloc(sizeof(char)*40);
+    int steps = 0;
+    char **path = malloc(sizeof(char*));
 
     struct Room *rooms;
     int i=0;
@@ -194,14 +209,17 @@ int main()
                 printf(", ");
             }
         }
-        printf("WHERE TO? > ");
+        printf("WHERE TO? >");
         fgets(next, 11, stdin);
-        currentRoom = setCurrentRoom(rooms, *currentRoom, next);
-    }while(endGame(currentRoom) != 1);
+        currentRoom = setCurrentRoom(rooms, *currentRoom, next, &steps, &path);
+    }while(endGame(*currentRoom) != 1);
 
-    free(currentRoom);
-    free(rooms);
-    free(dirName);
+    printf("\nYOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
+
+    for(i=0; i<steps; i++)
+    {
+        printf("\n%s\n", path[i]);
+    }
 
     return(0);
 }
