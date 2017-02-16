@@ -58,7 +58,7 @@ void getData(char *directory)
 {
     int i=0;
     char *fullName = malloc(sizeof(char)*50);
-    char str[256];
+    char str[256] = {0};
     int counter = 0;
 
     struct Room *rooms = malloc(sizeof(struct Room)*7);
@@ -71,11 +71,17 @@ void getData(char *directory)
         //printf("%s\n", fullName);
         FILE *f = fopen(fullName, "r");
         counter = 0;
-        while(fgets(str, 256, f)!=NULL)
+        while(fgets(str, 256, f)!=0)
         {
             if(counter == 0)
             {
                 //name
+                printf("\n%s\n", "name");
+            }else if(str[0] == 'C')
+            {
+                printf("%s\n", "connection");
+            }else {
+                printf("%s\n", "type");
             }
             printf("%s", str);
             counter++;
