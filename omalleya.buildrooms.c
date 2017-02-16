@@ -54,7 +54,7 @@ void printRoom(struct Room room,  char* fileName)
 			connectCount++;
 		}
 	}
-	fprintf(f, "ROOM TYPE: %s", room.type);
+	fprintf(f, "ROOM TYPE: %s\n", room.type);
 
 	fclose(f);
 }
@@ -159,6 +159,7 @@ void restOfRooms(struct Room *rooms)
 	int arraySize = NUM_ROOMS;
 	int numConnections = -1;
 	int randomConnection = -1;
+	char *fileNames[7] = {"one", "two", "three", "four", "five", "six", "seven"};
 
 	for(i=0; i<arraySize; i++)
 	{
@@ -190,7 +191,7 @@ void restOfRooms(struct Room *rooms)
 		strcpy(temp, "./");
 		strcat(temp, dirName);
 		strcat(temp, "/");
-		strcat(temp, rooms[i].name);
+		strcat(temp, fileNames[i]);
 		strcat(temp, ".txt");
 		printRoom(rooms[i], temp);
 	}

@@ -1,0 +1,4 @@
+*.o
+buildrooms*
+commands.txt
+omalleya.rooms*
