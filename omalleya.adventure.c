@@ -154,7 +154,7 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
 
 int main()
 {
-    char *next;
+    char *next = malloc(sizeof(char)*40);
     char *dirName = malloc(sizeof(char)*40);
 
     struct Room *rooms;
