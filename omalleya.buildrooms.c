@@ -5,9 +5,7 @@
 
 #define MAX_CONNECTIONS 6
 #define MIN_CONNECTIONS 3
-#define MAX_LEN_NAME 9
 #define MAX_LEN_TYPE 11
-#define LEN_CONNECTION 14
 #define NUM_ROOMS 7
 
 int checkMatrix[7][7] = {
@@ -26,7 +24,6 @@ struct Room
 	int totConnections;
 	int curConnections;
 	char *connections[MAX_CONNECTIONS];
-	//char connections[MAX_CONNECTIONS][LEN_CONNECTION + MAX_LEN_NAME];
 	char type[MAX_LEN_TYPE];
 };
 
@@ -76,7 +73,7 @@ void fillConnections(struct Room *room, int roomIndex, struct Room *rooms)
 	int j=0;
 	int counter = 0;
 	char *temp = malloc(sizeof(char)*20);
-	
+
 	for(i=0; i<7; i++)
 	{
 		if(checkMatrix[roomIndex][i] == 1 && roomIndex != i)
@@ -122,19 +119,14 @@ void createConnections(struct Room *room, int numConnections, int roomIndex, str
 				newConnect=randInt(0,6);
 			}while(checkMatrix[roomIndex][newConnect] == 1);
 
-			if(newConnect > roomIndex)
-			{
-				checkMatrix[roomIndex][newConnect] = 1;
-				checkMatrix[newConnect][roomIndex] = 1;
-				curConnect++;
-			}
+			checkMatrix[roomIndex][newConnect] = 1;
+			checkMatrix[newConnect][roomIndex] = 1;
+			curConnect++;
 			
 		}else {
 			break;
 		}
 	}
-
-	fillConnections(room, roomIndex, rooms);
 
 	for(i=0; i<7; i++)
 	{
@@ -180,6 +172,11 @@ void restOfRooms(struct Room *rooms)
 		createConnections(&rooms[i], numConnections, i, rooms);
 		printf("\n%d\n", numConnections);
 
+	}
+
+	for(i=0; i<arraySize; i++)
+	{
+		fillConnections(&rooms[i], i, rooms);
 	}
 
 	for(i=0; i<arraySize; i++)
