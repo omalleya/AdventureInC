@@ -83,17 +83,20 @@ struct Room* getData(char *directory)
             {
                 printf("\n%s\n", "name");
                 strncpy(rooms[i].name, str+11, 9);
+                rooms[i].name[strcspn(rooms[i].name, "\n")] = 0;
                 printf("\n%s\n", rooms[i].name);
             }else if(str[0] == 'C')
             {
                 printf("%s\n", "connection");
                 rooms[i].connections[connectCount] = malloc(sizeof(char)*15);
                 strncpy(rooms[i].connections[connectCount], str+14, 9);
+                rooms[i].connections[connectCount][strcspn(rooms[i].connections[connectCount], "\n")] = 0;
                 printf("\n%s\n", rooms[i].connections[connectCount]);
                 connectCount++;
             }else {
                 printf("%s\n", "type");
                 strncpy(rooms[i].type, str+11, 11);
+                rooms[i].type[strcspn(rooms[i].type, "\n")] = 0;
                 printf("\n%s\n", rooms[i].type);
             }
             printf("%s", str);
@@ -110,14 +113,10 @@ struct Room* getData(char *directory)
     return rooms;
 }
 
-void getCurrentRoom()
-{
-
-}
-
-struct Room* setCurrentRoom(struct Room currentRoom, char* nextRoom)
+struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* nextRoom)
 {
     int i=0;
+    int j=0;
     struct Room *newRoom;
     int newRoomCheck = -1;
 
@@ -128,7 +127,7 @@ struct Room* setCurrentRoom(struct Room currentRoom, char* nextRoom)
         if(strcmp(currentRoom.connections[i], nextRoom) == 0)
         {
             printf("\nMATCH\n");
-            newRoom = &currentRoom;
+            //newRoom = &currentRoom;
             newRoomCheck = 0;
             break;
         }
@@ -139,15 +138,22 @@ struct Room* setCurrentRoom(struct Room currentRoom, char* nextRoom)
         printf("\nHUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
         newRoom = &currentRoom;
     }
+    else {
+        for(j=0; j<6; j++)
+        {
+            if(strcmp(currentRoom.connections[i], rooms[j].name) == 0)
+            {
+                newRoom = &rooms[j];
+                break;
+            }
+        }
+    }
 
     return newRoom;
 }
 
 int main()
 {
-    //get room data
-    //then
-
     char *next;
     char *dirName = malloc(sizeof(char)*40);
 
@@ -162,26 +168,25 @@ int main()
 
     rooms = getData(dirName);
 
-    printf("\nHELLO::: %s\n", rooms[0].name);
-    printf("\nHELLO::: %s\n", rooms[6].connections[5]);
-
     struct Room *currentRoom = malloc(sizeof(struct Room));
     currentRoom = &rooms[0];
 
     do
     {
-        currentRoom->name[strcspn(currentRoom->name, "\n")] = 0;
         printf("CURRENT LOCATION: %s\n", currentRoom->name);
         printf("POSSIBLE CONNECTIONS: ");
         for(i=0; i<6; i++)
         {
             if(strcmp(currentRoom->connections[i], "") != 0)
             {
-                currentRoom->connections[i][strcspn(currentRoom->connections[i], "\n")] = 0;
                 printf("%s",currentRoom->connections[i]);
             }
             
             if(i+1 < 6 && strcmp(currentRoom->connections[i+1], "") == 0)
+            {
+                printf(".\n");
+                break;
+            }else if(i==5)
             {
                 printf(".\n");
                 break;
@@ -191,8 +196,12 @@ int main()
         }
         printf("WHERE TO? > ");
         fgets(next, 11, stdin);
-        currentRoom = setCurrentRoom(*currentRoom, next);
+        currentRoom = setCurrentRoom(rooms, *currentRoom, next);
     }while(endGame(currentRoom) != 1);
+
+    free(currentRoom);
+    free(rooms);
+    free(dirName);
 
     return(0);
 }
