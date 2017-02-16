@@ -10,6 +10,16 @@
 #define LEN_CONNECTION 14
 #define NUM_ROOMS 7
 
+int checkMatrix[7][7] = {
+		{1,0,0,0,0,0,0},
+		{0,1,0,0,0,0,0},
+		{0,0,1,0,0,0,0},
+		{0,0,0,1,0,0,0},
+		{0,0,0,0,1,0,0},
+		{0,0,0,0,0,1,0},
+		{0,0,0,0,0,0,1}
+	};
+
 struct Room
 {
 	char name[MAX_LEN_NAME];
@@ -33,31 +43,113 @@ void createRoomDir()
 void printRoom(struct Room room)
 {
 	int i = 0;
+	int connectCount = 1;
 
 	printf("\nROOM NAME: %s\n", room.name);
 	for(i=0; i<6; i++)
 	{
 		if(strcmp(room.connections[i],"")!=0)
 		{
-			printf("CONNECTION %d: %s\n", i+1, room.connections[i]);
+			printf("CONNECTION %d: %s\n", connectCount, room.connections[i]);
+			connectCount++;
 		}
 	}
 	printf("ROOM TYPE: %s\n", room.type);
 }
 
-void createConnections(struct Room *room, int numConnections)
+char * getRoomName(int index, struct Room *rooms)
 {
 	int i=0;
+	for(i=0; i<7; i++)
+	{
+		if(i == index)
+		{
+			return rooms[i].name;
+		}
+	}
+	return "";
+}
+
+void fillConnections(struct Room *room, int roomIndex, struct Room *rooms)
+{
+	int i=0;
+	int j=0;
+	int counter = 0;
+	char *temp = malloc(sizeof(char)*20);
+	
+	for(i=0; i<7; i++)
+	{
+		if(checkMatrix[roomIndex][i] == 1 && roomIndex != i)
+		{
+			room->connections[j] = malloc(sizeof(char)*15);
+			temp = getRoomName(i, rooms);
+			strcpy(room->connections[j], temp);
+			j++;
+		}else if(roomIndex == i)
+		{
+			continue;
+		}
+		else {
+			room->connections[j] = malloc(sizeof(char)*15);
+			strcpy(room->connections[j], "");
+			j++;
+		}
+	}
+}
+
+void createConnections(struct Room *room, int numConnections, int roomIndex, struct Room *rooms)
+{
+	
+	int i=0;
+	int j=0;
+	int newConnect=-1;
+	int curConnect = -1;
+
+	for(j=0;j<7;j++)
+	{
+		if(checkMatrix[roomIndex][j] == 1)
+		{
+			curConnect++;
+		}
+	}
+
 	for(i=0; i<6; i++)
 	{
-		if(i<numConnections)
+		if(i<numConnections && curConnect < numConnections)
 		{
-			room->connections[i] = malloc(sizeof(char)*7);
-			strcpy(room->connections[i], "connect");
+			do
+			{
+				newConnect=randInt(0,6);
+			}while(checkMatrix[roomIndex][newConnect] == 1);
+
+			if(newConnect > roomIndex)
+			{
+				checkMatrix[roomIndex][newConnect] = 1;
+				checkMatrix[newConnect][roomIndex] = 1;
+				curConnect++;
+			}
+			
 		}else {
-			room->connections[i] = malloc(sizeof(char)*7);
-			strcpy(room->connections[i], "");
+			break;
 		}
+	}
+
+	fillConnections(room, roomIndex, rooms);
+
+	for(i=0; i<7; i++)
+	{
+		printf(" %s ", getRoomName(i, rooms));
+	}
+
+	printf("\n");
+
+	for(i=0; i<7; i++)
+	{
+		for(j=0; j<7; j++)
+		{
+			printf("%d ", checkMatrix[i][j]);
+		}
+		printf("\n");
 	}
 
 		
@@ -85,9 +177,13 @@ void restOfRooms(struct Room *rooms)
 
 		numConnections = randInt(3,6);
 
-		createConnections(&rooms[i], numConnections);
+		createConnections(&rooms[i], numConnections, i, rooms);
 		printf("\n%d\n", numConnections);
 
+	}
+
+	for(i=0; i<arraySize; i++)
+	{
 		printRoom(rooms[i]);
 	}
 }
@@ -103,8 +199,6 @@ struct Room* randomRooms()
 	struct Room *rooms = malloc(7* sizeof(struct Room));
 	int index = -1;
 	int i = 0;
-
-	char *test;
 
 	//while we still have rooms to create
 	while(numRooms < 7)
