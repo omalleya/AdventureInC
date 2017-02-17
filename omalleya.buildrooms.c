@@ -132,23 +132,6 @@ void createConnections(struct Room *room, int numConnections, int roomIndex, str
 			break;
 		}
 	}
-
-	for(i=0; i<7; i++)
-	{
-		printf(" %s ", getRoomName(i, rooms));
-	}
-
-	printf("\n");
-
-	for(i=0; i<7; i++)
-	{
-		for(j=0; j<7; j++)
-		{
-			printf("%d ", checkMatrix[i][j]);
-		}
-		printf("\n");
-	}
-
 		
 }
 
@@ -176,7 +159,6 @@ void restOfRooms(struct Room *rooms)
 		numConnections = randInt(3,6);
 
 		createConnections(&rooms[i], numConnections, i, rooms);
-		printf("\n%d\n", numConnections);
 
 	}
 
@@ -247,8 +229,6 @@ int main()
 	//now we won't get the same number every time from randInt
 	time_t sysClock;
 	srand((unsigned) time(&sysClock));
-
-	printf("Hello World!\n");
 
 	//creates initial directory for rooms
 	createRoomDir();

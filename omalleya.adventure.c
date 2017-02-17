@@ -5,12 +5,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <pthread.h>
 
 #define MAX_CONNECTIONS 6
 #define MIN_CONNECTIONS 3
 #define MAX_LEN_TYPE 11
 #define NUM_ROOMS 7
 #define MAX_LEN_NAME 9
+
+pthread_t tid;
+pthread_mutex_t lock;
 
 char *fileNames[7] = {"one", "two", "three", "four", "five", "six", "seven"};
 
@@ -22,6 +26,42 @@ struct Room
 	char *connections[MAX_CONNECTIONS];
 	char type[MAX_LEN_TYPE];
 };
+
+void* writeTime(void *arg)
+{
+    pthread_mutex_lock(&lock);
+    FILE *f;
+
+    printf("\n Job started\n");
+
+    fopen("currentTime.txt", "w");
+    fprintf(f, "time\n");
+    fclose(f);
+
+    printf("\n Job finished\n");
+
+    pthread_mutex_unlock(&lock);
+
+    return NULL;
+}
+
+void readTime()
+{
+    pthread_mutex_lock(&lock);
+    FILE *f;
+    char* str = malloc(sizeof(char)*30);
+
+    printf("\n Job started\n");
+
+    fopen("currentTime.txt", "r");
+    while(fgets(str, 100, f)!=0)
+    {
+        printf("\n%s\n", str);
+    }
+    fclose(f);
+
+    printf("\n Job finished\n");
+}
 
 int endGame(struct Room room)
 {
@@ -49,7 +89,6 @@ void getLastDir(char** finalDir)
     char currentDir[100];
     memset(currentDir, '\0', sizeof(currentDir));
     getcwd(currentDir, sizeof(currentDir));
-    printf("%s\n", currentDir);
     DIR *d;
     struct dirent *dp;
     struct stat *buffer;
@@ -92,25 +131,18 @@ struct Room* getData(char *directory)
         {
             if(counter == 0)
             {
-                printf("\n%s\n", "name");
                 strncpy(rooms[i].name, str+11, 9);
                 rooms[i].name[strcspn(rooms[i].name, "\n")] = 0;
-                printf("\n%s\n", rooms[i].name);
             }else if(str[0] == 'C')
             {
-                printf("%s\n", "connection");
                 rooms[i].connections[connectCount] = malloc(sizeof(char)*15);
                 strncpy(rooms[i].connections[connectCount], str+14, 9);
                 rooms[i].connections[connectCount][strcspn(rooms[i].connections[connectCount], "\n")] = 0;
-                printf("\n%s\n", rooms[i].connections[connectCount]);
                 connectCount++;
             }else {
-                printf("%s\n", "type");
                 strncpy(rooms[i].type, str+11, 11);
                 rooms[i].type[strcspn(rooms[i].type, "\n")] = 0;
-                printf("\n%s\n", rooms[i].type);
             }
-            printf("%s", str);
             counter++;
         }
         while(connectCount < 6)
@@ -131,14 +163,10 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
     struct Room *newRoom;
     int newRoomCheck = -1;
 
-    nextRoom[strcspn(nextRoom, "\n")] = 0;
-
     for(i=0; i<6; i++)
     {
         if(strcmp(currentRoom.connections[i], nextRoom) == 0)
         {
-            printf("\nMATCH\n");
-            //newRoom = &currentRoom;
             newRoomCheck = 0;
             break;
         }
@@ -146,7 +174,7 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
 
     if(newRoomCheck != 0)
     {
-        printf("\nHUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n\n");
+        printf("\nHUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
         newRoom = &currentRoom;
     }
     else {
@@ -175,28 +203,38 @@ int main()
     struct Room *rooms;
     int i=0;
 
+    if (pthread_mutex_init(&lock, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+
+    pthread_mutex_lock(&lock);
+    pthread_create(&tid, NULL, &writeTime, NULL);
+
     //setting up proper string to access directory
-    strcpy(dirName, "./");
     getLastDir(&dirName);
     strcat(dirName, "/");
-    printf("\n%s\n",dirName);
 
+    //gets data from files and puts them into array of struct Rooms
     rooms = getData(dirName);
 
+    //set up initial currentRoom
     struct Room *currentRoom = malloc(sizeof(struct Room));
     currentRoom = &rooms[0];
 
     do
     {
-        printf("CURRENT LOCATION: %s\n", currentRoom->name);
+        printf("\nCURRENT LOCATION: %s\n", currentRoom->name);
         printf("POSSIBLE CONNECTIONS: ");
+        //prints connections with proper formatting
         for(i=0; i<6; i++)
         {
             if(strcmp(currentRoom->connections[i], "") != 0)
             {
                 printf("%s",currentRoom->connections[i]);
             }
-            
+            //decides whether to put period or comma after connection
             if(i+1 < 6 && strcmp(currentRoom->connections[i+1], "") == 0)
             {
                 printf(".\n");
@@ -210,16 +248,32 @@ int main()
             }
         }
         printf("WHERE TO? >");
-        fgets(next, 11, stdin);
-        currentRoom = setCurrentRoom(rooms, *currentRoom, next, &steps, &path);
+        //gets user input
+        fgets(next, 20, stdin);
+        next[strcspn(next, "\n")] = 0;
+        if(strcmp(next, "time") == 0)
+        {
+            //get time
+            pthread_mutex_unlock(&lock);
+            readTime();
+        }else {
+            //figures out what the room should be for the next loop
+            //also ends up calling function to update steps and path if necessary
+            currentRoom = setCurrentRoom(rooms, *currentRoom, next, &steps, &path);
+        }
+        
+    //if game isn't over, loop again
     }while(endGame(*currentRoom) != 1);
 
     printf("\nYOU HAVE FOUND THE END ROOM. CONGRATULATIONS!\n");
+    printf("YOU TOOK %d STEPS. YOUR PATH TO VICTORY WAS:\n", steps);
 
+    //prints path
     for(i=0; i<steps; i++)
     {
-        printf("\n%s\n", path[i]);
+        printf("%s\n", path[i]);
     }
 
+    pthread_mutex_destroy(&lock);
     return(0);
 }
