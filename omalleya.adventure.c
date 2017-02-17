@@ -14,7 +14,7 @@
 #define MAX_LEN_NAME 9
 
 pthread_t tid;
-pthread_mutex_t lock;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 char *fileNames[7] = {"one", "two", "three", "four", "five", "six", "seven"};
 
@@ -255,6 +255,7 @@ int main()
         {
             //get time
             pthread_mutex_unlock(&lock);
+            pthread_join(tid, NULL);
             readTime();
         }else {
             //figures out what the room should be for the next loop
