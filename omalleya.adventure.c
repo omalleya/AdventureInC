@@ -30,37 +30,39 @@ struct Room
 void* writeTime(void *arg)
 {
     pthread_mutex_lock(&lock);
-    FILE *f;
 
-    printf("\n Job started\n");
+    FILE *f = fopen("currentTime.txt", "w");
+    time_t mytime;
+    mytime = time(NULL);
+    char* curTime = malloc(sizeof(char)*40);
 
-    fopen("currentTime.txt", "w");
-    fprintf(f, "time\n");
+    strcpy(curTime, ctime(&mytime));
+    curTime[strcspn(curTime, "\n")] = 0;
+
+    fprintf(f, "%s", curTime);
     fclose(f);
 
-    printf("\n Job finished\n");
-
     pthread_mutex_unlock(&lock);
+    pthread_cancel(tid);
+    //pthread_detach(pthread_self());
 
     return NULL;
 }
 
 void readTime()
 {
+    
     pthread_mutex_lock(&lock);
-    FILE *f;
+    FILE *f = fopen("currentTime.txt", "r");
     char* str = malloc(sizeof(char)*30);
 
-    printf("\n Job started\n");
 
-    fopen("currentTime.txt", "r");
     while(fgets(str, 100, f)!=0)
     {
-        printf("\n%s\n", str);
+        printf("\n%s", str);
     }
     fclose(f);
 
-    printf("\n Job finished\n");
 }
 
 int endGame(struct Room room)
@@ -209,6 +211,7 @@ int main()
         return 1;
     }
 
+    //set up thread to write time
     pthread_mutex_lock(&lock);
     pthread_create(&tid, NULL, &writeTime, NULL);
 
@@ -257,6 +260,7 @@ int main()
             pthread_mutex_unlock(&lock);
             pthread_join(tid, NULL);
             readTime();
+            pthread_create(&tid, NULL, &writeTime, NULL);
         }else {
             //figures out what the room should be for the next loop
             //also ends up calling function to update steps and path if necessary
