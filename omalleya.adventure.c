@@ -18,15 +18,15 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 char *fileNames[7] = {"one", "two", "three", "four", "five", "six", "seven"};
 
+//Rooms
 struct Room
 {
 	char name[MAX_LEN_NAME];
-	int totConnections;
-	int curConnections;
 	char *connections[MAX_CONNECTIONS];
 	char type[MAX_LEN_TYPE];
 };
 
+//function called by second thread to write time to currentTime.txt
 void* writeTime(void *arg)
 {
     pthread_mutex_lock(&lock);
@@ -44,11 +44,11 @@ void* writeTime(void *arg)
 
     pthread_mutex_unlock(&lock);
     pthread_cancel(tid);
-    //pthread_detach(pthread_self());
 
     return NULL;
 }
 
+//main thread reads time after second thread finishes
 void readTime()
 {
     
@@ -65,17 +65,20 @@ void readTime()
 
 }
 
+//check to see if game is over
 int endGame(struct Room room)
 {
     char* end = "END_ROOM";
     if(strcmp(room.type, end) == 0)
     {
+        //we are in the end room
         return 1;
     }else{
         return 0;
     }
 }
 
+//function that adds to path array
 void addToPath(char ***curPath, char *nextStep, int steps)
 {
     int i = 0;
@@ -85,10 +88,12 @@ void addToPath(char ***curPath, char *nextStep, int steps)
     strcpy((*curPath)[steps-1], nextStep);
 }
 
+//gets most recent directory made
 void getLastDir(char** finalDir)
 {
     char *fd = "omalleya.rooms.";
     char currentDir[100];
+    //get current directory name
     memset(currentDir, '\0', sizeof(currentDir));
     getcwd(currentDir, sizeof(currentDir));
     DIR *d;
@@ -97,12 +102,14 @@ void getLastDir(char** finalDir)
     buffer = malloc(sizeof(struct stat));
     dp = malloc(sizeof(struct dirent));
     time_t lastModified;
+    //look through currentDir for last modified dir
     d = opendir(currentDir);
     if (d != NULL) {
         while (dp = readdir(d)) {	
             if (strstr(dp->d_name,fd) != NULL){
                 stat(dp->d_name, buffer);
                 lastModified = buffer->st_mtime;
+                //write to finalDir variable the name of the most recent directory
                 strcpy(*finalDir, dp->d_name);
             }
         }
@@ -110,6 +117,7 @@ void getLastDir(char** finalDir)
 
 }
 
+//gets data from room files and puts the data into structs
 struct Room* getData(char *directory)
 {
     int i=0;
@@ -123,30 +131,41 @@ struct Room* getData(char *directory)
 
     for(i=0; i<7; i++)
     {
+        //set up file to read from
         strcpy(fullName, directory);
         strcat(fullName, fileNames[i]);
         strcat(fullName, ".txt");
         FILE *f = fopen(fullName, "r");
         counter = 0;
         connectCount = 0;
+        //while we're still getting lines from file
         while(fgets(str, 100, f)!=0)
         {
+            //name
             if(counter == 0)
             {
                 strncpy(rooms[i].name, str+11, 9);
+                //gets rid of newline char
                 rooms[i].name[strcspn(rooms[i].name, "\n")] = 0;
-            }else if(str[0] == 'C')
+            }
+            //connections
+            else if(str[0] == 'C')
             {
                 rooms[i].connections[connectCount] = malloc(sizeof(char)*15);
                 strncpy(rooms[i].connections[connectCount], str+14, 9);
+                //gets rid of newline char
                 rooms[i].connections[connectCount][strcspn(rooms[i].connections[connectCount], "\n")] = 0;
                 connectCount++;
-            }else {
+            }
+            //type
+            else {
                 strncpy(rooms[i].type, str+11, 11);
+                //gets rid of newline char
                 rooms[i].type[strcspn(rooms[i].type, "\n")] = 0;
             }
             counter++;
         }
+        //fill up rest of connections array with empty strings
         while(connectCount < 6)
         {
             rooms[i].connections[connectCount] = malloc(sizeof(char)*15);
@@ -155,9 +174,11 @@ struct Room* getData(char *directory)
         }
         fclose(f);
     }
+    //return array of room structs
     return rooms;
 }
 
+//handles the new room the user told us to go to
 struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* nextRoom, int* steps, char*** path)
 {
     int i=0;
@@ -165,6 +186,7 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
     struct Room *newRoom;
     int newRoomCheck = -1;
 
+    //checks if the input is in the current rooms connections
     for(i=0; i<6; i++)
     {
         if(strcmp(currentRoom.connections[i], nextRoom) == 0)
@@ -174,16 +196,20 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
         }
     }
 
+    //if input isn't in the current rooms connections error
+    //go back to current room
     if(newRoomCheck != 0)
     {
         printf("\nHUH? I DON’T UNDERSTAND THAT ROOM. TRY AGAIN.\n");
         newRoom = &currentRoom;
     }
+    //else get current room
     else {
         for(j=0; j<7; j++)
         {
             if(strcmp(currentRoom.connections[i], rooms[j].name) == 0)
             {
+                //get next current room update steps and path
                 newRoom = &rooms[j];
                 (*steps)++;
                 addToPath(path, rooms[j].name, *steps);
@@ -192,6 +218,7 @@ struct Room* setCurrentRoom(struct Room *rooms, struct Room currentRoom, char* n
         }
     }
 
+    //return new current room
     return newRoom;
 }
 
@@ -205,6 +232,7 @@ int main()
     struct Room *rooms;
     int i=0;
 
+    //intitialize mutex
     if (pthread_mutex_init(&lock, NULL) != 0)
     {
         printf("\n mutex init failed\n");
@@ -226,6 +254,7 @@ int main()
     struct Room *currentRoom = malloc(sizeof(struct Room));
     currentRoom = &rooms[0];
 
+    //game loop
     do
     {
         printf("\nCURRENT LOCATION: %s\n", currentRoom->name);
@@ -253,6 +282,7 @@ int main()
         printf("WHERE TO? >");
         //gets user input
         fgets(next, 20, stdin);
+        //gets rid of newline char
         next[strcspn(next, "\n")] = 0;
         if(strcmp(next, "time") == 0)
         {

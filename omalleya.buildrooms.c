@@ -21,15 +21,15 @@ int checkMatrix[7][7] = {
 
 char dirName[36];
 
+//rooms data structure
 struct Room
 {
 	char name[MAX_LEN_NAME];
-	int totConnections;
-	int curConnections;
 	char *connections[MAX_CONNECTIONS];
 	char type[MAX_LEN_TYPE];
 };
 
+//creates directory with pid
 void createRoomDir() 
 {
 	int pid = getpid();
@@ -39,26 +39,35 @@ void createRoomDir()
 
 }
 
+//prints room to intended file
 void printRoom(struct Room room,  char* fileName)
 {
 	FILE *f = fopen(fileName, "w");
 	int i = 0;
 	int connectCount = 1;
 
+	//print room name
 	fprintf(f, "ROOM NAME: %s\n", room.name);
+
+	//prints each connection
 	for(i=0; i<6; i++)
 	{
+		//as long as element in connections array isn't empty
 		if(strcmp(room.connections[i],"")!=0)
 		{
 			fprintf(f, "CONNECTION %d: %s\n", connectCount, room.connections[i]);
+			//this gets the correct number next to output
 			connectCount++;
 		}
 	}
+	//prints room type
 	fprintf(f, "ROOM TYPE: %s\n", room.type);
 
 	fclose(f);
 }
 
+//gets connection's room name to put into struct
+//used in combination with checkMatrix
 char * getRoomName(int index, struct Room *rooms)
 {
 	int i=0;
@@ -69,28 +78,34 @@ char * getRoomName(int index, struct Room *rooms)
 			return rooms[i].name;
 		}
 	}
+	//return nothing if name couldn't be found
 	return "";
 }
+
 
 void fillConnections(struct Room *room, int roomIndex, struct Room *rooms)
 {
 	int i=0;
 	int j=0;
-	int counter = 0;
 	char *temp = malloc(sizeof(char)*20);
 
 	for(i=0; i<7; i++)
 	{
+		//if the room isn't already a connection 
+		//and it's not the room we're making connections for
 		if(checkMatrix[roomIndex][i] == 1 && roomIndex != i)
 		{
 			room->connections[j] = malloc(sizeof(char)*15);
 			temp = getRoomName(i, rooms);
+			//put this connections room name into the array for connections
 			strcpy(room->connections[j], temp);
 			j++;
-		}else if(roomIndex == i)
+		}
+		else if(roomIndex == i)
 		{
 			continue;
 		}
+		//else fill the connection with nothing
 		else {
 			room->connections[j] = malloc(sizeof(char)*15);
 			strcpy(room->connections[j], "");
@@ -107,6 +122,7 @@ void createConnections(struct Room *room, int numConnections, int roomIndex, str
 	int newConnect=-1;
 	int curConnect = -1;
 
+	//check how many connections are currently in this room
 	for(j=0;j<7;j++)
 	{
 		if(checkMatrix[roomIndex][j] == 1)
@@ -117,13 +133,16 @@ void createConnections(struct Room *room, int numConnections, int roomIndex, str
 
 	for(i=0; i<6; i++)
 	{
+		//if i 
 		if(i<numConnections && curConnect < numConnections)
 		{
+			//get random numbers while the connection isn't new
 			do
 			{
 				newConnect=randInt(0,6);
 			}while(checkMatrix[roomIndex][newConnect] == 1);
 
+			//one the random number is valid add ones to the checkMatrix
 			checkMatrix[roomIndex][newConnect] = 1;
 			checkMatrix[newConnect][roomIndex] = 1;
 			curConnect++;
@@ -144,6 +163,7 @@ void restOfRooms(struct Room *rooms)
 	int randomConnection = -1;
 	char *fileNames[7] = {"one", "two", "three", "four", "five", "six", "seven"};
 
+	//gives room proper type
 	for(i=0; i<arraySize; i++)
 	{
 		if(i == 0)
@@ -156,17 +176,22 @@ void restOfRooms(struct Room *rooms)
 			strcpy(rooms[i].type, "MID_ROOM");
 		}
 
+		//get random number between 3 and 6 to use for connection number
 		numConnections = randInt(3,6);
 
+		//create the connections for this room
 		createConnections(&rooms[i], numConnections, i, rooms);
 
 	}
 
+	//fill the connections once the checkMatrix has been completed
 	for(i=0; i<arraySize; i++)
 	{
 		fillConnections(&rooms[i], i, rooms);
 	}
 
+	//set up files to write rooms into
+	//print rooms
 	char* temp = malloc(sizeof(char)*40);
 	for(i=0; i<arraySize; i++)
 	{
@@ -179,6 +204,7 @@ void restOfRooms(struct Room *rooms)
 	}
 }
 
+//just randomizes pool of 7 rooms and sets up array of structs for these
 struct Room* randomRooms()
 {
 	char *roomNames[10] = {"Big","SMALL", "Medium", 
